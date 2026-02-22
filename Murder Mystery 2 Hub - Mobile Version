@@ -1,13 +1,14 @@
+-- [ CARREGAMENTO DA UI ]
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
 local Window = Rayfield:CreateWindow({
-   Name = "Murder Mystery 2 Hub | by @drayko.exe",
-   LoadingTitle = "Carregando Funções",
-   LoadingSubtitle = "made by drayko",
+   Name = "Universal Hub | @drayko.exe",
+   LoadingTitle = "Iniciando Sistema...",
+   LoadingSubtitle = "by drayko",
    Theme = "Ocean" 
 })
 
--- [ VARIÁVEIS DE CONTROLE ]
+-- [ SERVIÇOS ]
 local UserInputService = game:GetService("UserInputService")
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
@@ -16,68 +17,18 @@ local Workspace = game:GetService("Workspace")
 local player = Players.LocalPlayer
 local Camera = Workspace.CurrentCamera
 
+-- [ VARIÁVEIS DE ESTADO ]
 local xrayOriginals = {} 
-local xrayEnabled = false
-local aimbotEnabled = false
-local adminEnabled = false
-local aimbotRange = 100 
-local lastShotTime = 0
-local fireRate = 0.5 
+local state = {
+    xray = false,
+    aimbot = false,
+    admin = false,
+    aimRange = 100,
+    fireRate = 0.5,
+    lastShot = 0
+}
 
--- [ 1. LÓGICA ADMIN ROLES (ESP) ]
-local function refreshAdminRoles()
-    while task.wait(1) do
-        if not adminEnabled then break end
-        for _, plr in pairs(Players:GetPlayers()) do
-            if plr ~= player and plr.Character then
-                local char = plr.Character
-                local color = Color3.fromRGB(0, 255, 0) -- Inocente
-                
-                local hasKnife = char:FindFirstChild("Knife") or plr.Backpack:FindFirstChild("Knife")
-                local hasGun = char:FindFirstChild("Gun") or plr.Backpack:FindFirstChild("Gun") or char:FindFirstChild("Revolver") or plr.Backpack:FindFirstChild("Revolver")
-
-                if hasKnife then
-                    color = Color3.fromRGB(255, 0, 0) -- Murder
-                elseif hasGun then
-                    color = Color3.fromRGB(0, 0, 255) -- Sheriff
-                end
-
-                local highlight = char:FindFirstChild("AdminHighlight") or Instance.new("Highlight")
-                highlight.Name = "AdminHighlight"
-                highlight.FillColor = color
-                highlight.FillTransparency = 0.5
-                highlight.OutlineColor = color
-                highlight.OutlineTransparency = 0
-                highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
-                highlight.Parent = char
-            end
-        end
-    end
-end
-
--- [ 2. LÓGICA X-RAY ]
-local function applyXray(state)
-    xrayEnabled = state
-    if xrayEnabled then
-        for _, obj in pairs(Workspace:GetDescendants()) do
-            if obj:IsA("BasePart") and not obj:IsDescendantOf(player.Character) then
-                if not xrayOriginals[obj] then 
-                    xrayOriginals[obj] = obj.Transparency 
-                end
-                obj.Transparency = 0.5
-            end
-        end
-    else
-        for obj, originalValue in pairs(xrayOriginals) do
-            if obj and obj.Parent then 
-                obj.Transparency = originalValue 
-            end
-        end
-        xrayOriginals = {} 
-    end
-end
-
--- [ 3. INFINITE JUMP (SEMPRE ATIVO) ]
+-- [ 1. INFINITE JUMP - SEMPRE ATIVO ]
 UserInputService.JumpRequest:Connect(function()
     local character = player.Character
     local humanoid = character and character:FindFirstChildOfClass("Humanoid")
@@ -86,45 +37,121 @@ UserInputService.JumpRequest:Connect(function()
     end
 end)
 
+-- [ 2. LÓGICA X-RAY ]
+local function toggleXray(v)
+    state.xray = v
+    if state.xray then
+        for _, obj in pairs(Workspace:GetDescendants()) do
+            if obj:IsA("BasePart") and not obj:IsDescendantOf(player.Character) then
+                if not xrayOriginals[obj] then xrayOriginals[obj] = obj.Transparency end
+                obj.Transparency = 0.5
+            end
+        end
+    else
+        for obj, original in pairs(xrayOriginals) do
+            if obj and obj.Parent then obj.Transparency = original end
+        end
+        xrayOriginals = {}
+    end
+end
+
+-- [ 3. LÓGICA ADMIN ROLES (MM2 ESP) ]
+task.spawn(function()
+    while true do
+        task.wait(1)
+        if state.admin then
+            for _, plr in pairs(Players:GetPlayers()) do
+                if plr ~= player and plr.Character then
+                    local char = plr.Character
+                    local color = Color3.fromRGB(0, 255, 0) -- Inocente
+                    
+                    local hasKnife = char:FindFirstChild("Knife") or plr.Backpack:FindFirstChild("Knife")
+                    local hasGun = char:FindFirstChild("Gun") or plr.Backpack:FindFirstChild("Gun") or char:FindFirstChild("Revolver") or plr.Backpack:FindFirstChild("Revolver")
+
+                    if hasKnife then color = Color3.fromRGB(255, 0, 0)
+                    elseif hasGun then color = Color3.fromRGB(0, 0, 255) end
+
+                    local highlight = char:FindFirstChild("AdminHighlight") or Instance.new("Highlight")
+                    highlight.Name = "AdminHighlight"
+                    highlight.FillColor = color
+                    highlight.OutlineColor = color
+                    highlight.FillTransparency = 0.5
+                    highlight.Parent = char
+                end
+            end
+        end
+    end
+end)
+
 -- [ 4. LÓGICA AIMBOT ]
 RunService.RenderStepped:Connect(function()
-    if not aimbotEnabled then return end
-    local currentTime = tick()
-    if currentTime - lastShotTime < fireRate then return end
+    if not state.aimbot then return end
+    if tick() - state.lastShot < state.fireRate then return end
     
-    local nearestTarget = nil
-    local minDistance = aimbotRange
-    local myRoot = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+    local target = nil
+    local dist = state.aimRange
+    local root = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
 
-    if myRoot then
+    if root then
         for _, plr in pairs(Players:GetPlayers()) do
             if plr ~= player and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
-                local distance = (myRoot.Position - plr.Character.HumanoidRootPart.Position).Magnitude
-                if distance < minDistance then
-                    minDistance = distance
-                    nearestTarget = plr.Character.HumanoidRootPart
+                local d = (root.Position - plr.Character.HumanoidRootPart.Position).Magnitude
+                if d < dist then
+                    dist = d
+                    target = plr.Character.HumanoidRootPart
                 end
             end
         end
     end
 
-    if nearestTarget then
-        Camera.CFrame = CFrame.new(Camera.CFrame.Position, nearestTarget.Position)
-        lastShotTime = currentTime
+    if target then
+        Camera.CFrame = CFrame.new(Camera.CFrame.Position, target.Position)
+        state.lastShot = tick()
     end
 end)
 
--- [ INTERFACE RAYFIELD ]
-
-local MainTab = Window:CreateTab("Principal", 4483362458)
+-- [ ABAS DA INTERFACE ]
+local MainTab = Window:CreateTab("Funções", 4483362458)
 
 MainTab:CreateToggle({
-   Name = "Admin Roles (Revelar Cargos)",
+   Name = "Revelar Cargos (Admin Roles)",
    CurrentValue = false,
-   Callback = function(Value)
-      adminEnabled = Value
-      if adminEnabled then
-          task.spawn(refreshAdminRoles)
-      else
-          for _, plr in pairs(Players:GetPlayers()) do
-              if
+   Callback = function(v) 
+        state.admin = v 
+        if not v then
+            for _, plr in pairs(Players:GetPlayers()) do
+                if plr.Character and plr.Character:FindFirstChild("AdminHighlight") then
+                    plr.Character.AdminHighlight:Destroy()
+                end
+            end
+        end
+   end,
+})
+
+MainTab:CreateToggle({
+   Name = "X-Ray Vision",
+   CurrentValue = false,
+   Callback = function(v) toggleXray(v) end,
+})
+
+MainTab:CreateToggle({
+   Name = "Aimbot",
+   CurrentValue = false,
+   Callback = function(v) state.aimbot = v end,
+})
+
+local MiscTab = Window:CreateTab("Misc", 4483362458)
+
+MiscTab:CreateButton({
+   Name = "Teleportar p/ Trás (7 Studs)",
+   Callback = function()
+      local hrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+      if hrp then hrp.CFrame = hrp.CFrame * CFrame.new(0, 0, 7) end
+   end,
+})
+
+MiscTab:CreateLabel("Pulo Infinito: ATIVADO")
+
+local SocialTab = Window:CreateTab("Social", 4483362458)
+SocialTab:CreateButton({ Name = "Copiar TikTok", Callback = function() setclipboard("@drayko.exe") end })
+SocialTab:CreateButton({ Name = "Copiar Discord", Callback = function() setclipboard("https://discord.gg/EqTyzs4S") end })
