@@ -28,7 +28,7 @@ local state = {
     lastShot = 0
 }
 
--- [ 1. INFINITE JUMP - SEMPRE ATIVO ]
+-- [ 1. INFINITE JUMP ]
 UserInputService.JumpRequest:Connect(function()
     local character = player.Character
     local humanoid = character and character:FindFirstChildOfClass("Humanoid")
@@ -111,6 +111,8 @@ RunService.RenderStepped:Connect(function()
 end)
 
 -- [ ABAS DA INTERFACE ]
+
+-- ABA FUNÇÕES
 local MainTab = Window:CreateTab("Funções", 4483362458)
 
 MainTab:CreateToggle({
@@ -140,6 +142,24 @@ MainTab:CreateToggle({
    Callback = function(v) state.aimbot = v end,
 })
 
+-- ABA VISUAL (NOVA - SHADERS)
+local VisualTab = Window:CreateTab("Visual & Shaders", 4483362458)
+
+VisualTab:CreateButton({
+   Name = "Ativar Shaders (RTX/V6)",
+   Callback = function()
+       -- Carrega o script externo solicitado
+       loadstring(game:HttpGet("https://raw.githubusercontent.com/drayko-exe/Shaders-v6/refs/heads/main/made%20by%20me"))()
+       Rayfield:Notify({
+          Title = "Shaders Ativados",
+          Content = "O script de Shaders V6 foi carregado com sucesso!",
+          Duration = 5,
+          Image = 4483362458,
+       })
+   end,
+})
+
+-- ABA MISC
 local MiscTab = Window:CreateTab("Misc", 4483362458)
 
 MiscTab:CreateButton({
@@ -152,6 +172,7 @@ MiscTab:CreateButton({
 
 MiscTab:CreateLabel("Pulo Infinito: ATIVADO")
 
+-- ABA SOCIAL
 local SocialTab = Window:CreateTab("Social", 4483362458)
 SocialTab:CreateButton({ Name = "Copiar TikTok", Callback = function() setclipboard("@drayko.exe") end })
 SocialTab:CreateButton({ Name = "Copiar Discord", Callback = function() setclipboard("https://discord.gg/EqTyzs4S") end })
