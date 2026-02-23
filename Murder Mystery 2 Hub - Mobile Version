@@ -142,18 +142,32 @@ MainTab:CreateToggle({
    Callback = function(v) state.aimbot = v end,
 })
 
--- ABA VISUAL (NOVA - SHADERS)
+-- ABA VISUAL (SHADERS)
 local VisualTab = Window:CreateTab("Visual & Shaders", 4483362458)
 
+VisualTab:CreateSection("Opções de Shaders")
+
 VisualTab:CreateButton({
-   Name = "Ativar Shaders (RTX/V6)",
+   Name = "Ativar Shaders V6",
    Callback = function()
-       -- Carrega o script externo solicitado
        loadstring(game:HttpGet("https://raw.githubusercontent.com/drayko-exe/Shaders-v6/refs/heads/main/made%20by%20me"))()
        Rayfield:Notify({
-          Title = "Shaders Ativados",
-          Content = "O script de Shaders V6 foi carregado com sucesso!",
-          Duration = 5,
+          Title = "Shaders V6",
+          Content = "Shaders V6 carregados com sucesso!",
+          Duration = 3,
+          Image = 4483362458,
+       })
+   end,
+})
+
+VisualTab:CreateButton({
+   Name = "Ativar Shaders By Drayko",
+   Callback = function()
+       loadstring(game:HttpGet("https://raw.githubusercontent.com/drayko-exe/shaders-by-drayko.exe/refs/heads/main/shaders%20by%20%40drayko.exe"))()
+       Rayfield:Notify({
+          Title = "Shaders Custom",
+          Content = "Versão @drayko.exe carregada!",
+          Duration = 3,
           Image = 4483362458,
        })
    end,
