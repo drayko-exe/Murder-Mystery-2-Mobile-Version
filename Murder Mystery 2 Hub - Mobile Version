@@ -142,6 +142,22 @@ MainTab:CreateToggle({
    Callback = function(v) state.aimbot = v end,
 })
 
+-- ABA MM2 HUB (NOVA)
+local MM2Tab = Window:CreateTab("MM2 Hub", 4483362458)
+
+MM2Tab:CreateButton({
+   Name = "Carregar MM2 Mobile Hub",
+   Callback = function()
+       loadstring(game:HttpGet("https://raw.githubusercontent.com/drayko-exe/Murder-Mystery-2-Mobile-Version/refs/heads/main/Murder%20Mystery%202%20Hub%20-%20Mobile%20Version"))()
+       Rayfield:Notify({
+          Title = "MM2 Hub",
+          Content = "Script Mobile carregado com sucesso!",
+          Duration = 5,
+          Image = 4483362458,
+       })
+   end,
+})
+
 -- ABA VISUAL (SHADERS)
 local VisualTab = Window:CreateTab("Visual & Shaders", 4483362458)
 
@@ -151,12 +167,6 @@ VisualTab:CreateButton({
    Name = "Ativar Shaders V6",
    Callback = function()
        loadstring(game:HttpGet("https://raw.githubusercontent.com/drayko-exe/Shaders-v6/refs/heads/main/made%20by%20me"))()
-       Rayfield:Notify({
-          Title = "Shaders V6",
-          Content = "Shaders V6 carregados com sucesso!",
-          Duration = 3,
-          Image = 4483362458,
-       })
    end,
 })
 
@@ -164,12 +174,6 @@ VisualTab:CreateButton({
    Name = "Ativar Shaders By Drayko",
    Callback = function()
        loadstring(game:HttpGet("https://raw.githubusercontent.com/drayko-exe/shaders-by-drayko.exe/refs/heads/main/shaders%20by%20%40drayko.exe"))()
-       Rayfield:Notify({
-          Title = "Shaders Custom",
-          Content = "Versão @drayko.exe carregada!",
-          Duration = 3,
-          Image = 4483362458,
-       })
    end,
 })
 
